@@ -55,10 +55,72 @@
     [bk start];
      */
     
-    [self addOperationToQueue];
+    [self setupOperation];
 }
 
 #pragma mark - nsoperation
+
+- (void)setupOperation {
+    NSOperationQueue *queue1 = [NSOperationQueue new];
+    NSOperationQueue *queue2 = [[NSOperationQueue alloc] init];
+    
+    NSInvocationOperation *op1 = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(task1) object:nil];
+ /*
+    [queue2 addOperationWithBlock:^{
+        
+        for (int i = 0; i < 10; i++) {
+            [NSThread sleepForTimeInterval:0.2];
+            NSLog(@"2-----%@, ---%d", [NSThread currentThread], [[NSThread currentThread] isFinished]);
+            
+            NSLog(@"2----> %@", [NSThread currentThread].isCancelled ? @"取消" : @"没有");
+            if (i == 5) {
+                [[NSThread currentThread] cancel];
+                NSLog(@"2--cancel--> %@", [NSThread currentThread].isCancelled ? @"取消" : @"没有");
+
+            }
+            
+            NSLog(@"execute = %d", [NSThread currentThread].isExecuting);
+            NSLog(@"isMainThread = %d", [[NSThread currentThread] isMainThread]);
+
+        }
+        
+    }];
+    
+    [queue2 addOperationWithBlock:^{
+        for (int i = 0; i < 3; i++) {
+            [NSThread sleepForTimeInterval:0.2];
+            NSLog(@"4 ---> %@", [NSThread currentThread]);
+            
+        }
+    }];
+    */
+    
+    
+    
+    
+    NSBlockOperation *bo1 = [NSBlockOperation blockOperationWithBlock:^{
+        for (int i = 0; i < 3; i++) {
+            [NSThread sleepForTimeInterval:0.2];
+            NSLog(@"3 --->%@", [NSThread currentThread]);
+        }
+    }];
+    
+    [bo1 setCompletionBlock:^{
+        NSLog(@"completion");
+    }];
+    
+    [bo1 addDependency:op1];
+    NSLog(@"depen = %@", bo1.dependencies);
+    
+//    [bo1 waitUntilFinished];
+    [queue1 addOperation:bo1];
+    [queue1 addOperation:op1];
+    NSLog(@"---->cancel");
+    [queue2 setSuspended:YES];
+    
+    
+
+}
 
 /**
  * 设置 MaxConcurrentOperationCount（最大并发操作数）
